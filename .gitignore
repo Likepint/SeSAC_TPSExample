@@ -1,0 +1,12 @@
+.git/
+.vs/
+
+Binaries/
+Content/StarterContent/
+
+DerivedDataCache/
+Intermediate/
+Saved/
+
+.vsconfig
+*.sln
