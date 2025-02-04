@@ -1,6 +1,9 @@
 #include "Characters/CTPSCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "GameFramework/PlayerController.h"
 
 ACTPSCharacter::ACTPSCharacter()
 {
@@ -14,6 +17,12 @@ void ACTPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (APlayerController* controller = Cast<APlayerController>(GetController()))
+	{	// Get local player subsystem
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer()))
+			// Add input context
+			Subsystem->AddMappingContext(IMC_TPS, 0);
+	}
 }
 
 void ACTPSCharacter::Tick(float DeltaTime)
@@ -26,30 +35,78 @@ void ACTPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(IA_VerticalLook, ETriggerEvent::Triggered, this, &ACTPSCharacter::OnVerticalLook);
+		EnhancedInputComponent->BindAction(IA_HorizontalLook, ETriggerEvent::Triggered, this, &ACTPSCharacter::OnHorizontalLook);
+
+		EnhancedInputComponent->BindAction(IA_Movement, ETriggerEvent::Triggered, this, &ACTPSCharacter::OnMovement);
+
+		EnhancedInputComponent->BindAction(IA_JumpAction, ETriggerEvent::Started, this, &ACTPSCharacter::OnJumpAction);
+
+	}
+}
+
+void ACTPSCharacter::OnVerticalLook(const FInputActionValue& InVal)
+{
+	float value = InVal.Get<float>();
+
+	AddControllerPitchInput(value);
+	
+}
+
+void ACTPSCharacter::OnHorizontalLook(const FInputActionValue& InVal)
+{
+	float value = InVal.Get<float>();
+
+	AddControllerYawInput(value);
+
+}
+
+void ACTPSCharacter::OnMovement(const FInputActionValue& InVal)
+{
+	// Forward
+	AddMovementInput(GetActorForwardVector(), InVal.Get<FVector>().X);
+
+	// Right
+	AddMovementInput(GetActorRightVector(), InVal.Get<FVector>().Y);
+
+}
+
+void ACTPSCharacter::OnJumpAction(const FInputActionValue& InVal)
+{
+	Jump();
+
 }
 
 void ACTPSCharacter::InitializeCharacter()
 {
-	// Meshø° SK_Mannequin ∑ŒµÂ »ƒ º≥¡§
+	// MeshÏóê SK_Mannequin Î°úÎìú ÌõÑ ÏÑ§Ï†ï
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> mesh(L"/Script/Engine.SkeletalMesh'/Game/PJS/Characters/Meshes/SK_Mannequin.SK_Mannequin'");
-	if (mesh.Succeeded()) // º∫∞¯¿Ã∂Û∏È
+	if (mesh.Succeeded()) // ÏÑ±Í≥µÏù¥ÎùºÎ©¥
 		GetMesh()->SetSkeletalMesh(mesh.Object);
 
-	// ¿ßƒ°∞™∞˙ »∏¿¸∞™ π›øµ
+	// ÏúÑÏπòÍ∞íÍ≥º ÌöåÏ†ÑÍ∞í Î∞òÏòÅ
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90), FRotator(0, -90, 0));
 
-	// SpringArm Component ª˝º∫
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
-	// Root Componentø° Attach
-	SpringArm->SetupAttachment(RootComponent);
-	// ªÛ¥Î¿ßƒ° ¡ˆ¡§
-	SpringArm->SetRelativeLocation(FVector(0, 60, 80));
-	// TargetArmLength ¡ˆ¡§
-	SpringArm->TargetArmLength = 300;
+	bUseControllerRotationYaw = true;
 
-	// Camera Component ª˝º∫
+	// SpringArm Component ÏÉùÏÑ±
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
+	// Root ComponentÏóê Attach
+	SpringArm->SetupAttachment(RootComponent);
+	// ÏÉÅÎåÄÏúÑÏπò ÏßÄÏ†ï
+	SpringArm->SetRelativeLocation(FVector(0, 60, 80));
+	// TargetArmLength ÏßÄÏ†ï
+	SpringArm->TargetArmLength = 300;
+	// UsePawnControlRotation ÏÑ§Ï†ï
+	SpringArm->bUsePawnControlRotation = true;
+
+	// Camera Component ÏÉùÏÑ±
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
-	// SpringArm Componentø° Attach
+	// SpringArm ComponentÏóê Attach
 	Camera->SetupAttachment(SpringArm);
+	// UsePawnControlRotation ÏÑ§Ï†ï
+	Camera->bUsePawnControlRotation = false;
 
 }
