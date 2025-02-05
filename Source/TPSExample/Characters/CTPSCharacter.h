@@ -16,6 +16,13 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class UCameraComponent* Camera;
 
+private:
+	UPROPERTY(VisibleAnywhere, Category = "RifleMesh")
+	class USkeletalMeshComponent* RifleMesh;
+
+	UPROPERTY(EditAnywhere, Category = "BulletFactory")
+	TSubclassOf<class ACBullet> BulletFactory;
+
 private: // Input
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputMappingContext* IMC_TPS;
@@ -31,6 +38,9 @@ private: // Input
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_JumpAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Fire;
 
 public:
 	ACTPSCharacter();
@@ -50,6 +60,8 @@ private:
 	void OnMovement(const struct FInputActionValue& InVal);
 
 	void OnJumpAction(const struct FInputActionValue& InVal);
+
+	void OnFire(const struct FInputActionValue& InVal);
 
 private:
 	void InitializeCharacter();

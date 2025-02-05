@@ -4,6 +4,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PlayerController.h"
+#include "Weapons/CBullet.h"
 
 ACTPSCharacter::ACTPSCharacter()
 {
@@ -44,6 +45,8 @@ void ACTPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(IA_JumpAction, ETriggerEvent::Started, this, &ACTPSCharacter::OnJumpAction);
 
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &ACTPSCharacter::OnFire);
+
 	}
 }
 
@@ -79,6 +82,14 @@ void ACTPSCharacter::OnJumpAction(const FInputActionValue& InVal)
 
 }
 
+void ACTPSCharacter::OnFire(const FInputActionValue& InVal)
+{
+	FTransform firePosition = RifleMesh->GetSocketTransform("FirePosition");
+
+	GetWorld()->SpawnActor<ACBullet>(BulletFactory, firePosition);
+
+}
+
 void ACTPSCharacter::InitializeCharacter()
 {
 	// Mesh에 SK_Mannequin 로드 후 설정
@@ -108,5 +119,19 @@ void ACTPSCharacter::InitializeCharacter()
 	Camera->SetupAttachment(SpringArm);
 	// UsePawnControlRotation 설정
 	Camera->bUsePawnControlRotation = false;
+
+	// 라이플 스켈레탈 메시 컴포넌트 등록
+	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>("RifleMesh");
+
+	// 스켈레탈 메시 위치 지정
+	RifleMesh->SetRelativeLocation(FVector(0, 60, 120));
+
+	// 부모 컴포넌트를 Mesh 컴포넌트로 설정
+	RifleMesh->SetupAttachment(GetMesh());
+
+	// 스켈레탈 메시 데이터 로드
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> rifle(L"/Script/Engine.SkeletalMesh'/Game/PJS/Weapons/Rifle/Mesh/SK_FPGun.SK_FPGun'");
+	if (rifle.Succeeded())
+		RifleMesh->SetSkeletalMesh(rifle.Object);
 
 }
