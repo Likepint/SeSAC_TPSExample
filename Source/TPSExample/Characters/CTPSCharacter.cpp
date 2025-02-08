@@ -8,6 +8,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CEnemyFSMComponent.h"
 
 ACTPSCharacter::ACTPSCharacter()
 {
@@ -39,7 +40,7 @@ void ACTPSCharacter::BeginPlay()
 	CrossHairUI = CreateWidget<UUserWidget>(GetWorld(), CrosshairUIFactory);
 
 	// 일반 조준 UI 등록
-	//CrossHairUI->AddToViewport();
+	CrossHairUI->AddToViewport();
 }
 
 void ACTPSCharacter::Tick(float DeltaTime)
@@ -185,6 +186,15 @@ void ACTPSCharacter::OnFire(const FInputActionValue& InVal)
 				// 그 방향으로 날리기
 				hitComp->AddForceAtLocation(force, info.ImpactPoint);
 			}
+
+			// 부딪힌 대상이 적인 체크
+			auto enemy = info.GetActor()->GetDefaultSubobjectByName("FSM");
+
+			if (enemy)
+			{
+				auto enemyFSM = Cast<UCEnemyFSMComponent>(enemy);
+				enemyFSM->OnDamageProcess();
+			}
 		}
 	}
 }
@@ -203,7 +213,7 @@ void ACTPSCharacter::OnZoom(const FInputActionValue& InVal)
 		// 카메라의 시야각 FOV 설정
 		Camera->SetFieldOfView(45);
 
-		//CrossHairUI->RemoveFromParent();
+		CrossHairUI->RemoveFromParent();
 	}
 	else
 	{// Completed 입력처리
@@ -213,7 +223,7 @@ void ACTPSCharacter::OnZoom(const FInputActionValue& InVal)
 
 		Camera->SetFieldOfView(90);
 
-		//CrossHairUI->AddToViewport();
+		CrossHairUI->AddToViewport();
 	}
 
 }
