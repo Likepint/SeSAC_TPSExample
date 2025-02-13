@@ -9,6 +9,9 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CEnemyFSMComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Character.h"
+#include "Characters/CTPSAnimInstance.h"
 
 ACTPSCharacter::ACTPSCharacter()
 {
@@ -41,6 +44,9 @@ void ACTPSCharacter::BeginPlay()
 
 	// 일반 조준 UI 등록
 	CrossHairUI->AddToViewport();
+
+	// 초기속도를 걷기로 설정
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 void ACTPSCharacter::Tick(float DeltaTime)
@@ -69,6 +75,9 @@ void ACTPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Started, this, &ACTPSCharacter::OnZoom);
 		EnhancedInputComponent->BindAction(IA_Zoom, ETriggerEvent::Completed, this, &ACTPSCharacter::OnZoom);
+
+		EnhancedInputComponent->BindAction(IA_Run, ETriggerEvent::Triggered, this, &ACTPSCharacter::OnRun);
+		EnhancedInputComponent->BindAction(IA_Run, ETriggerEvent::Completed, this, &ACTPSCharacter::OnRun);
 
 	}
 }
@@ -129,6 +138,10 @@ void ACTPSCharacter::OnSniper(const FInputActionValue& InVal)
 
 void ACTPSCharacter::OnFire(const FInputActionValue& InVal)
 {
+	// 공격 애니메이션 재생
+	if (auto anim = Cast<UCTPSAnimInstance>(GetMesh()->GetAnimInstance()))
+		anim->PlayAttackAnim();
+
 	// Rifle
 	if (bRifle)
 	{
@@ -226,6 +239,13 @@ void ACTPSCharacter::OnZoom(const FInputActionValue& InVal)
 		CrossHairUI->AddToViewport();
 	}
 
+}
+
+void ACTPSCharacter::OnRun(const struct FInputActionValue& InVal)
+{
+	if (InVal.Get<bool>())
+		GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
+	else GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 void ACTPSCharacter::InitializeCharacter()

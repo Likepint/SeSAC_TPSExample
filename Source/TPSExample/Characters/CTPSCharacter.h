@@ -75,6 +75,15 @@ private: // Input
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Zoom;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Run;
+
+	UPROPERTY(EditAnywhere, Category = "Speed")
+	float WalkSpeed = 200;
+
+	UPROPERTY(EditAnywhere, Category = "Speed")
+	float RunSpeed = 600;
+
 public:
 	ACTPSCharacter();
 
@@ -100,6 +109,8 @@ private:
 	void OnFire(const struct FInputActionValue& InVal);
 
 	void OnZoom(const struct FInputActionValue& InVal);
+
+	void OnRun(const struct FInputActionValue& InVal);
 
 private:
 	void InitializeCharacter();
