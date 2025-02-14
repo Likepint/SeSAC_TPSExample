@@ -32,9 +32,8 @@ void ACTPSCharacter::BeginPlay()
 			Subsystem->AddMappingContext(IMC_TPS, 0);
 	}
 
-	// 무기 모두 숨김 처리
+	// 라이플 모두 숨김 처리
 	RifleMesh->SetVisibility(false);
-	SniperMesh->SetVisibility(false);
 
 	// 스나이퍼 UI 위젯 인스턴스 생성
 	SniperUI = CreateWidget<UUserWidget>(GetWorld(), SniperUIFactory);
@@ -78,6 +77,11 @@ void ACTPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(IA_Run, ETriggerEvent::Triggered, this, &ACTPSCharacter::OnRun);
 		EnhancedInputComponent->BindAction(IA_Run, ETriggerEvent::Completed, this, &ACTPSCharacter::OnRun);
+
+		EnhancedInputComponent->BindAction(IA_CrouchHold, ETriggerEvent::Triggered, this, &ACTPSCharacter::OnCrouchHoldStart);
+		EnhancedInputComponent->BindAction(IA_CrouchHold, ETriggerEvent::Completed, this, &ACTPSCharacter::OnCrouchHoldEnd);
+
+		EnhancedInputComponent->BindAction(IA_CrouchToggle, ETriggerEvent::Started, this, &ACTPSCharacter::OnCrouchToggle);
 
 	}
 }
@@ -142,6 +146,10 @@ void ACTPSCharacter::OnFire(const FInputActionValue& InVal)
 	if (auto anim = Cast<UCTPSAnimInstance>(GetMesh()->GetAnimInstance()))
 		anim->PlayAttackAnim();
 
+	// 카메라 셰이크 재생
+	auto controller = GetWorld()->GetFirstPlayerController();
+	controller->PlayerCameraManager->StartCameraShake(CameraShake);
+
 	// Rifle
 	if (bRifle)
 	{
@@ -152,6 +160,9 @@ void ACTPSCharacter::OnFire(const FInputActionValue& InVal)
 	// Sniper
 	else
 	{
+		// 발사 사운드
+		UGameplayStatics::PlaySound2D(GetWorld(), SniperSound);
+
 		// LineTrace의 시작 위치
 		FVector start = Camera->GetComponentLocation();
 		 
@@ -248,6 +259,30 @@ void ACTPSCharacter::OnRun(const struct FInputActionValue& InVal)
 	else GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
+void ACTPSCharacter::OnCrouchHoldStart(const FInputActionValue& InVal)
+{
+	if (!bCrouched)
+		bCrouched = !bCrouched;
+
+	Crouch();
+}
+
+void ACTPSCharacter::OnCrouchHoldEnd(const FInputActionValue& InVal)
+{
+	bCrouched = !bCrouched;
+
+	UnCrouch();
+}
+
+void ACTPSCharacter::OnCrouchToggle(const FInputActionValue& InVal)
+{
+	bCrouched = !bCrouched;
+
+	if (bCrouched)
+		Crouch();
+	else UnCrouch();
+}
+
 void ACTPSCharacter::InitializeCharacter()
 {
 	// Mesh에 SK_Mannequin 로드 후 설정
@@ -278,6 +313,11 @@ void ACTPSCharacter::InitializeCharacter()
 	// UsePawnControlRotation 설정
 	Camera->bUsePawnControlRotation = false;
 
+	// Mesh의 AnimInstance를 파일로 로드해서 적용
+	ConstructorHelpers::FClassFinder<UAnimInstance> anim(L"/Script/Engine.AnimBlueprint'/Game/PJS/Blueprints/ABP_AnimInstance.ABP_AnimInstance_C'");
+	if (anim.Succeeded())
+		GetMesh()->SetAnimClass(anim.Class);
+
 	// 라이플 스켈레탈 메시 컴포넌트 등록
 	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>("RifleMesh");
 
@@ -295,17 +335,20 @@ void ACTPSCharacter::InitializeCharacter()
 	// 스나이퍼 스태틱 메시 컴포넌트 등록
 	SniperMesh = CreateDefaultSubobject<UStaticMeshComponent>("SniperMesh");
 
-	// 부모 컴포넌트를 Mesh 컴포넌트로 설정
-	SniperMesh->SetupAttachment(GetMesh());
-
-	// 스나이퍼 메시 위치 지정
-	SniperMesh->SetRelativeLocation(FVector(0, 90, 120));
-
-	// 스나이퍼 메시 스케일 지정
-	SniperMesh->SetRelativeScale3D(FVector(0.15));
-
 	ConstructorHelpers::FObjectFinder<UStaticMesh> sniper(L"/Script/Engine.StaticMesh'/Game/PJS/Weapons/Sniper/Mesh/sniper.sniper'");
 	if (sniper.Succeeded())
 		SniperMesh->SetStaticMesh(sniper.Object);
 
+	// 부모 컴포넌트를 Mesh 컴포넌트로 설정
+	SniperMesh->SetupAttachment(GetMesh(), "Hand_Sniper");
+	//// 스나이퍼 메시 위치 지정
+	//SniperMesh->SetRelativeLocation(FVector(0, 90, 120));
+
+	//// 스나이퍼 메시 스케일 지정
+	//SniperMesh->SetRelativeScale3D(FVector(0.15));
+
+	// 총알 사운드 로드
+	ConstructorHelpers::FObjectFinder<USoundBase> sound(L"/Script/Engine.SoundWave'/Game/PJS/Weapons/Sniper/Sounds/Sniper.Sniper'");
+	if (sound.Succeeded())
+		SniperSound = sound.Object;
 }
