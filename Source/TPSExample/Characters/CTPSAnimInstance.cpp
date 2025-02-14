@@ -20,6 +20,8 @@ void UCTPSAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		// 플레이어가 현재 공중에 있는 상태인지 저장
 		IsInAir = player->GetCharacterMovement()->IsFalling();
+
+		bCrouched = player->bCrouched;
 	}
 }
 

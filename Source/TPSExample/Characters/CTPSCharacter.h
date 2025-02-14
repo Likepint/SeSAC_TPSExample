@@ -84,6 +84,27 @@ private: // Input
 	UPROPERTY(EditAnywhere, Category = "Speed")
 	float RunSpeed = 600;
 
+	// Crouch
+	// LCtrl버튼은 홀드 방식
+	// C버튼은 토글 방식
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_CrouchHold;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_CrouchToggle;
+
+	// 카메라 셰이크 블루프린트를 저장할 변수
+	UPROPERTY(EditDefaultsOnly, Category = "CameraShake")
+	TSubclassOf<class UCameraShakeBase> CameraShake;
+
+	// 스나이퍼 발사 사운드
+	UPROPERTY(EditDefaultsOnly, Category = "CameraShake")
+	class USoundBase* SniperSound;
+
+
+public:
+	bool bCrouched = false;
+
 public:
 	ACTPSCharacter();
 
@@ -111,6 +132,10 @@ private:
 	void OnZoom(const struct FInputActionValue& InVal);
 
 	void OnRun(const struct FInputActionValue& InVal);
+
+	void OnCrouchHoldStart(const struct FInputActionValue& InVal);
+	void OnCrouchHoldEnd(const struct FInputActionValue& InVal);
+	void OnCrouchToggle(const struct FInputActionValue& InVal);
 
 private:
 	void InitializeCharacter();

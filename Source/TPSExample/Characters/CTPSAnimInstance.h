@@ -25,6 +25,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "TPS")
 	bool IsInAir = false;
 
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "TPS")
+	bool bCrouched = false;
+
 	// 재생할 공격 애니메이션 몽타주
 	UPROPERTY(EditDefaultsOnly, Category = "TPS")
 	class UAnimMontage* AttackAnimMontage;
