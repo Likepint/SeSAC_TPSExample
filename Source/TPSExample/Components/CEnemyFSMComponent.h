@@ -80,4 +80,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "FSM")
 	float DeadSpeed = 50;
 
+	UPROPERTY()
+	class UCEnemyAnimInstance* Anim;
+
+	void OnAttackEnd();
+
 };
