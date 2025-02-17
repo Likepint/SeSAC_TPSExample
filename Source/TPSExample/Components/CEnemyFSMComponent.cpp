@@ -4,6 +4,7 @@
 #include "Characters/CTPSCharacter.h"
 #include "Characters/CEnemy.h"
 #include "Components/CapsuleComponent.h"
+#include "Characters/CEnemyAnimInstance.h"
 
 UCEnemyFSMComponent::UCEnemyFSMComponent()
 {
@@ -23,6 +24,8 @@ void UCEnemyFSMComponent::BeginPlay()
 
 		// 오너 불러오기
 		me = Cast<ACEnemy>(GetOwner());
+
+		Anim = Cast<UCEnemyAnimInstance>(me->GetMesh()->GetAnimInstance());
 	}
 }
 
@@ -80,6 +83,8 @@ void UCEnemyFSMComponent::IdleState()
 		// 이동 상태로 전환
 		mState = EEnemyState::Move;
 
+		Anim->AnimState = mState;
+
 		// 경과 시간 초기화
 		CurrentTime = 0;
 	}
@@ -99,7 +104,15 @@ void UCEnemyFSMComponent::MoveState()
 	// 타겟과 거리를 체크해서 AttackRange 안으로 들어오면 공격 상태로 전환
 	// 거리 체크
 	if (dir.Size() <= AttackRange)
+	{
 		mState = EEnemyState::Attack;
+
+		Anim->AnimState = mState;
+
+		Anim->bAttackPlay = true;
+
+		CurrentTime = AttackDelayTime;
+	}
 }
 
 void UCEnemyFSMComponent::AttackState()
@@ -113,6 +126,8 @@ void UCEnemyFSMComponent::AttackState()
 	{
 		// 공격 실행
 		PRINT_LOG(TEXT("Attack~!~!~!"));
+
+		Anim->bAttackPlay = true;
 
 		// 결과 시간 초기화
 		CurrentTime = 0;
@@ -137,6 +152,8 @@ void UCEnemyFSMComponent::DamagedState()
 	{
 		// 대기 상태로 전환
 		mState = EEnemyState::Idle;
+
+		Anim->AnimState = mState;
 
 		// 경과 시간 초기화
 		CurrentTime = 0;
@@ -172,4 +189,11 @@ void UCEnemyFSMComponent::OnDamageProcess()
 		// 캡슐의 충돌체 비활성화
 		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+
+	Anim->AnimState = mState;
+}
+
+void UCEnemyFSMComponent::OnAttackEnd()
+{
+	Anim->bAttackPlay = false;
 }
