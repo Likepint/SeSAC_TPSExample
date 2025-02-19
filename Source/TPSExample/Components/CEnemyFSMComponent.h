@@ -67,7 +67,8 @@ public:
 	float AttackDelayTime = 2;
 
 	// 피격 알림 이벤트 함수
-	void OnDamageProcess();
+	// void OnDamageProcess();
+	void OnDamageProcess(int32 InDamage);
 
 	// 체력
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "FSM")
@@ -84,5 +85,19 @@ public:
 	class UCEnemyAnimInstance* Anim;
 
 	void OnAttackEnd();
+
+	// 애니메이션 재생이 끝나면 아래로 내려가도록
+	bool bDead = false;
+	FORCEINLINE void OnDeadEnd() { bDead = true; }
+
+	// Enemy를 소유하고 있는 AIController
+	UPROPERTY()
+	class AAIController* AI;
+
+	// 길 찾기 수행시 랜덤 위치
+	FVector RandPosition;
+
+	// 랜덤 위치 가져오기
+	bool GetRandPositionInNavMesh(FVector InCenterLocation, float InRadius, FVector& InDest);
 
 };
