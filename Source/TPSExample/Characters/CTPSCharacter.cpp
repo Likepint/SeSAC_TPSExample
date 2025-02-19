@@ -217,7 +217,7 @@ void ACTPSCharacter::OnFire(const FInputActionValue& InVal)
 			if (enemy)
 			{
 				auto enemyFSM = Cast<UCEnemyFSMComponent>(enemy);
-				enemyFSM->OnDamageProcess();
+				enemyFSM->OnDamageProcess(1);
 			}
 		}
 	}
